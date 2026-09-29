@@ -31,7 +31,7 @@
 Клонируйте репозиторий:
 
 ```bash
-git clone https://github.com/ваш-username/solo-bot.git
+git clone https://github.com/prostoonic/Solo_automation_bot
 cd solo-bot
 ```
 
