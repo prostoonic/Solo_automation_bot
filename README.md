@@ -32,7 +32,7 @@
 
 ```bash
 git clone https://github.com/prostoonic/Solo_automation_bot
-cd solo-bot
+cd Solo_automation_bot
 ```
 
 Установите зависимости:
