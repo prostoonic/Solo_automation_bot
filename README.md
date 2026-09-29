@@ -1,4 +1,4 @@
-# Solo_-automation_bot
+# Solo_automation_bot
 # Соло на клавиатуре Bot
 
 Автоматизация прохождения уроков в тренажёре «Соло на клавиатуре» с использованием Python, Tkinter и PyAutoGUI.
