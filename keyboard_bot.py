@@ -72,7 +72,7 @@ def _send_key(scan_code: int, key_up: bool = False, virtual_key: int = 0) -> Non
 
 def _tap_virtual_key(virtual_key: int, scan_code: int) -> None:
     _send_key(scan_code, virtual_key=virtual_key)
-    time.sleep(0.04)
+    time.sleep(random.uniform(0.035, 0.06))
     _send_key(scan_code, key_up=True, virtual_key=virtual_key)
 
 
@@ -81,7 +81,7 @@ def _tap_scan_code(scan_code: int, shift: bool = False) -> None:
         _send_key(_SC_SHIFT)
         time.sleep(0.01)
     _send_key(scan_code)
-    time.sleep(0.02)
+    time.sleep(random.uniform(0.012, 0.03))
     _send_key(scan_code, key_up=True)
     if shift:
         time.sleep(0.01)
@@ -155,9 +155,34 @@ def _type_char(char: str, language: str, controller: Controller) -> None:
     _tap_scan_code(*key)
 
 
-def _keyboard_language() -> str:
+def _foreground_window() -> int:
+    return ctypes.windll.user32.GetForegroundWindow()
+
+
+def _focus_window(window: int) -> bool:
+    """Возвращает фокус на окно. True, если получилось."""
     user32 = ctypes.windll.user32
-    window = user32.GetForegroundWindow()
+    try:
+        if user32.IsIconic(window):  # разворачиваем только свёрнутое окно
+            user32.ShowWindow(window, 9)
+        user32.SetForegroundWindow(window)
+    except Exception:
+        pass
+    time.sleep(0.3)
+    if _foreground_window() == window:
+        return True
+    try:  # запасной вариант, если Windows не дал сменить окно
+        user32.keybd_event(0x12, 0, 0, 0)
+        user32.keybd_event(0x12, 0, 2, 0)
+        user32.SetForegroundWindow(window)
+    except Exception:
+        pass
+    time.sleep(0.3)
+    return _foreground_window() == window
+
+
+def _keyboard_language(window: int) -> str:
+    user32 = ctypes.windll.user32
     if not window:
         return "other"
     thread_id = user32.GetWindowThreadProcessId(window, None)
@@ -207,11 +232,13 @@ class KeyboardBot:
 
         self._put("status", text="Выполняется")
 
+        target = _foreground_window()
+
         text = self.exercise.text
         total = len(text)
         self._put("progress", typed=0, total=total)
 
-        language = _keyboard_language()
+        language = _keyboard_language(target)
         has_cyrillic = any("а" <= char.lower() <= "я" or char.lower() == "ё" for char in text)
         has_latin = any(char.isascii() and char.isalpha() for char in text)
         if (has_cyrillic and language != "ru") or (
@@ -233,6 +260,14 @@ class KeyboardBot:
             for ch in text:
                 if self.stop_event.is_set():
                     self._put("stopped")
+                    return
+
+                if _foreground_window() != target and not _focus_window(target):
+                    self._put(
+                        "error_msg",
+                        text="Окно Solo потеряло фокус, вернуть не удалось. Печать остановлена.",
+                    )
+                    self._put("status", text="Ошибка")
                     return
 
                 _type_char(ch, language, controller)
