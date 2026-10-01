@@ -22,4 +22,3 @@ class Exercise:
 @dataclass
 class BotSettings:
     cpm: float
-    error_percent: float

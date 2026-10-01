@@ -4,7 +4,6 @@ XML_PATH = "126_00020202.xml16.xml"
 
 # Значения по умолчанию для GUI.
 DEFAULT_SPEED = 250.0          # символов в минуту
-DEFAULT_ERROR_PERCENT = 5.0    # процент ошибок
 START_DELAY = 3.0              # задержка перед стартом, сек
 MIN_SPEED = 10.0
 MAX_SPEED = 2000.0

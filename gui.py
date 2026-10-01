@@ -38,14 +38,8 @@ class App:
             row=1, column=1, sticky="w", pady=2
         )
 
-        ttk.Label(main, text="Процент ошибок:").grid(row=2, column=0, sticky="w", pady=2)
-        self.error_var = tk.StringVar(value=str(config.DEFAULT_ERROR_PERCENT))
-        ttk.Entry(main, textvariable=self.error_var, width=15).grid(
-            row=2, column=1, sticky="w", pady=2
-        )
-
         btn_frame = ttk.Frame(main)
-        btn_frame.grid(row=3, column=0, columnspan=2, pady=10)
+        btn_frame.grid(row=2, column=0, columnspan=2, pady=10)
         self.start_btn = ttk.Button(btn_frame, text="Старт", command=self._on_start)
         self.start_btn.grid(row=0, column=0, padx=5)
         self.stop_btn = ttk.Button(
@@ -53,19 +47,16 @@ class App:
         )
         self.stop_btn.grid(row=0, column=1, padx=5)
 
-        ttk.Label(main, text="Статус:").grid(row=4, column=0, sticky="w", pady=2)
+        ttk.Label(main, text="Статус:").grid(row=3, column=0, sticky="w", pady=2)
         self.status_label = ttk.Label(main, text="Готово")
-        self.status_label.grid(row=4, column=1, sticky="w", pady=2)
+        self.status_label.grid(row=3, column=1, sticky="w", pady=2)
 
-        ttk.Label(main, text="Прогресс:").grid(row=5, column=0, sticky="w", pady=2)
+        ttk.Label(main, text="Прогресс:").grid(row=4, column=0, sticky="w", pady=2)
         self.progress_bar = ttk.Progressbar(main, orient="horizontal", mode="determinate")
-        self.progress_bar.grid(row=5, column=1, sticky="ew", pady=2)
+        self.progress_bar.grid(row=4, column=1, sticky="ew", pady=2)
 
         self.typed_label = ttk.Label(main, text="Символов: 0 / 0")
-        self.typed_label.grid(row=6, column=1, sticky="w", pady=2)
-
-        self.errors_label = ttk.Label(main, text="Ошибок: 0")
-        self.errors_label.grid(row=7, column=1, sticky="w", pady=2)
+        self.typed_label.grid(row=5, column=1, sticky="w", pady=2)
 
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
@@ -88,7 +79,6 @@ class App:
             self.progress_bar["maximum"] = len(ex.text)
             self.progress_bar["value"] = 0
             self.typed_label.config(text=f"Символов: 0 / {len(ex.text)}")
-            self.errors_label.config(text="Ошибок: 0")
 
     def _on_start(self) -> None:
         if self.bot and self.bot.thread and self.bot.thread.is_alive():
@@ -112,15 +102,7 @@ class App:
             messagebox.showerror("Ошибка", "Некорректная скорость.")
             return
 
-        try:
-            err = float(self.error_var.get())
-            if err < 0 or err > 100:
-                raise ValueError
-        except ValueError:
-            messagebox.showerror("Ошибка", "Некорректный процент ошибок.")
-            return
-
-        settings = BotSettings(cpm=cpm, error_percent=err)
+        settings = BotSettings(cpm=cpm)
         self.bot = KeyboardBot(ex, settings, self.queue)
         self.bot.start()
 
@@ -129,7 +111,6 @@ class App:
         self.progress_bar["maximum"] = len(ex.text)
         self.progress_bar["value"] = 0
         self.typed_label.config(text=f"Символов: 0 / {len(ex.text)}")
-        self.errors_label.config(text="Ошибок: 0")
         self.status_label.config(text="Запуск")
 
     def _on_stop(self) -> None:
@@ -153,8 +134,6 @@ class App:
                 self.typed_label.config(
                     text=f"Символов: {data['typed']} / {data['total']}"
                 )
-            elif msg == "error_count":
-                self.errors_label.config(text=f"Ошибок: {data['errors']}")
             elif msg == "finished":
                 self.status_label.config(text="Завершено")
                 self.start_btn.config(state="normal")
